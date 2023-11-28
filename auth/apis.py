@@ -53,7 +53,7 @@ def login():
         'username': user.username,
         'email': user.email,
         'role': user.role.value,
-        'exp': datetime.utcnow() + timedelta(minutes=15)
+        'exp': datetime.utcnow() + timedelta(minutes=60)
     }
     token = jwt.encode(payload, os.getenv('SECRET_KEY'), algorithm="HS256")
     
