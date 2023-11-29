@@ -4,6 +4,7 @@ from infrastructure.db import db
 from todolist.models import Todolist
 from marshmallow import Schema, fields, ValidationError
 from datetime import datetime, timedelta
+from sqlalchemy.exc import SQLAlchemyError
 
 todolist_blueprint = Blueprint("todolist", __name__)
 
@@ -12,7 +13,7 @@ class TodosSchema(Schema):
     priority = fields.String(required=True)
     status = fields.String(required=True)
 
-@todolist_blueprint.route("", methods=["POST"])
+@todolist_blueprint.route("/", methods=["POST"])
 @user_required
 def create_todolist(user_id):
     data = request.get_json()
@@ -37,8 +38,7 @@ def create_todolist(user_id):
     return {"success": True, "message": "Successfully created a todo", "data": data}, 200
 
 
-
-@todolist_blueprint.route("", methods=["GET"])
+@todolist_blueprint.route("/", methods=["GET"])
 def get_all_todolist():
     todos = Todolist.query.all()
 
@@ -56,38 +56,47 @@ def get_all_todolist():
 
     return {"success": True, "message": "List of todos", "data": result_todos}, 200
 
+@todolist_blueprint.route("/<int:todo_id>", methods=["PUT"])
+@user_required
+def update_todolist(user_id, todo_id):
+    try:
+        data = request.get_json()
+        priority = data.get("priority")
+        status = data.get("status")
+        activity = data.get("activity")
+        dueDate = data.get("dueDate")
 
-# @todolist_blueprint.route('/<int:todo_id>', methods=["PUT"])
-# @user_required
-# def update_todolist(todo_id):
+        todo = Todolist.query.get(todo_id)
+        if not todo:
+            return {"error": "Todo item not found"}, 404
 
-#     data = request.get_json()
-#     priority = data.get("priority")
-#     status = data.get("status")
-#     activity = data.get("activity")
-#     dueDate = data.get("dueDate")
+        # Update fields only if the respective data is provided in the request
+        if priority is not None:
+            todo.priority = priority
+        if status is not None:
+            todo.status = status
+        if activity is not None:
+            todo.activity = activity
+        if dueDate is not None:
+            todo.dueDate = dueDate
 
-#     todo = Todolist.query.get(todo_id)
-#     if not todo:
-#         return {"error": "Todo item not found"}, 404
+        db.session.commit()
 
-#     todo.priority = priority
-#     todo.status = status
-#     todo.activity = activity
-#     todo.dueDate = dueDate
+        return {"success": True, "message": "Successfully updated a todo", "data": todo_id }, 200
 
-#     db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return {"error": "An error occurred while updating the todo"}, 500
 
-#     return {"success": True, "message": "Successfully update a todo" }, 200
 
-# @todolist_blueprint.route('/delete/<int:todo_id>', methods=["DELETE"])
-# @user_required
-# def delete_todolist(todo_id):
-#     todo = Todolist.query.get(todo_id)
-#     if not todo:
-#         return {"error": "Todo item not found"}, 404
+@todolist_blueprint.route("/<int:todo_id>", methods=["DELETE"])
+@user_required
+def delete_todolist(user_id, todo_id):
+    todo = Todolist.query.get(todo_id)
+    if not todo:
+        return {"error": "Todo item not found"}, 404
 
-#     db.session.delete(todo)
-#     db.session.commit()
+    db.session.delete(todo)
+    db.session.commit()
 
-#     return {"message": "Todo item deleted successfully"}, 200
+    return {"success": True, "message": "Todo item deleted", "data": todo_id}, 200
