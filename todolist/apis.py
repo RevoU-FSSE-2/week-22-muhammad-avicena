@@ -39,6 +39,7 @@ def create_todolist(user_id):
 
 
 @todolist_blueprint.route("/", methods=["GET"])
+@user_required
 def get_all_todolist():
     todos = Todolist.query.all()
 
