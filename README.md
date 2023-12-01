@@ -81,7 +81,7 @@ API Collection : [https://documenter.getpostman.com/view/3529439/2s9YeK3VDy](htt
 
 Docker Hub : [https://hub.docker.com/r/avicenadevs/todolist-backend](https://hub.docker.com/r/avicenadevs/todolist-backendy)
 
-![docker](./assets-github/Docker.png.png)
+![docker](./assets-github/Docker.png)
 
 ## DEPLOYMENT DATABASE IN SUPABASE⚙️
 
