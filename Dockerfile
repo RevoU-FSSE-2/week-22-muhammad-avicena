@@ -1,20 +1,21 @@
 # Use an official Python runtime as a parent image
 FROM --platform=linux/amd64 python:3.12
 
-# Set the working directory
+# Set the working directory to /app
+RUN mkdir -p /app
+
+# Copy file needed and setup work directory
+COPY . /app
 WORKDIR /app
 
-# Copy Pipfile and Pipfile.lock
-COPY Pipfile Pipfile.lock /app/
-
 # Install Pipenv
-RUN pip install pipenv
+RUN pip install -U pipenv
 
 # Install dependencies using Pipenv
 RUN pipenv install --deploy
 
-# Expose port 5001 for Gunicorn
+# Expose port 80 for Gunicorn
 EXPOSE 80
 
 # Run Gunicorn
-CMD ["pipenv", "run", "gunicorn", "-b", "0.0.0.0:80", "app:app"]
+CMD ["pipenv", "run", "gunicorn", "-b", "0.0.0.0:80", "wsgi:application"]
